@@ -6,8 +6,12 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
+<<<<<<< HEAD
 django = "==2.2.2"
 pillow = "*"
+=======
+django = "==2.2.10"
+>>>>>>> 4abfcc5971c993de0a7d6e904a69d24fdce94a16
 
 [requires]
 python_version = "3.7"
