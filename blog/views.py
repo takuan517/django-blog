@@ -49,6 +49,7 @@ class PostDetailView(DetailView):
 class IndexView(ListView):
     model = Post
     template_name = 'blog/index.html'
+    paginate_by = 3
 
 class CategoryListView(ListView):
     queryset = Category.objects.annotate(
