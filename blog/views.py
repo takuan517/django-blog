@@ -1,14 +1,30 @@
-# blog/views.py
-
+from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q
 from django.http import Http404
+from django.shortcuts import get_object_or_404, redirect
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
-from django.contrib.auth.decorators import login_required
 from django.views.generic.edit import CreateView
-from django.shortcuts import get_object_or_404, redirect
+
 from blog.forms import CommentForm, ReplyForm
 from blog.models import Post, Category, Tag, Comment, Reply
+
+
+class PostDetailView(DetailView):
+    model = Post
+
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset=queryset)
+        if not obj.is_public and not self.request.user.is_authenticated:
+            raise Http404
+        return obj
+
+
+class IndexView(ListView):
+    model = Post
+    template_name = 'blog/index.html'
+    paginate_by = 3
+
 
 class CategoryPostView(ListView):
     model = Post
@@ -25,6 +41,7 @@ class CategoryPostView(ListView):
         context['category'] = self.category
         return context
 
+
 class TagPostView(ListView):
     model = Post
     template_name = 'blog/tag_post.html'
@@ -40,27 +57,6 @@ class TagPostView(ListView):
         context['tag'] = self.tag
         return context
 
-class PostDetailView(DetailView):
-    model = Post
-
-    def get_object(self, queryset=None):
-        obj = super().get_object(queryset=queryset)
-        if not obj.is_public and not self.request.user.is_authenticated:
-            raise Http404
-        return obj
-
-class IndexView(ListView):
-    model = Post
-    template_name = 'blog/index.html'
-    paginate_by = 3
-
-class CategoryListView(ListView):
-    queryset = Category.objects.annotate(
-        num_posts=Count('post', filter=Q(post__is_public=True)))
-
-class TagListView(ListView):
-    queryset = Tag.objects.annotate(num_posts=Count(
-        'post', filter=Q(post__is_public=True)))
 
 class SearchPostView(ListView):
     model = Post
@@ -87,6 +83,17 @@ class SearchPostView(ListView):
         context['query'] = query
         return context
 
+
+class CategoryListView(ListView):
+    queryset = Category.objects.annotate(
+        num_posts=Count('post', filter=Q(post__is_public=True)))
+
+
+class TagListView(ListView):
+    queryset = Tag.objects.annotate(num_posts=Count(
+        'post', filter=Q(post__is_public=True)))
+
+
 class CommentFormView(CreateView):
     model = Comment
     form_class = CommentForm
@@ -110,8 +117,8 @@ def comment_approve(request, pk):
     comment = get_object_or_404(Comment, pk=pk)
     comment.approve()
     return redirect('blog:post_detail', pk=comment.post.pk)
- 
- 
+
+
 @login_required
 def comment_remove(request, pk):
     comment = get_object_or_404(Comment, pk=pk)

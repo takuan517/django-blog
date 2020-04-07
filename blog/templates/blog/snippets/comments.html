@@ -1,5 +1,3 @@
-<!-- blog/templates/blog/snippets/comments.html -->
-
 {% for comment in post.comments.all %}
 {% if user.is_authenticated or comment.approved %}
 <div class="comment">
